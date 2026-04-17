@@ -1,0 +1,17 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Text.Json.Serialization;
+
+namespace Babbelite.Shared
+{
+    /// <summary>
+    /// Represents a message with a binary payload. This payload is sent as a separate WebSocket binary
+    /// message that follows immediately after this one.
+    /// </summary>
+    public abstract class BinaryPayloadMessage : Message
+    {
+        [JsonIgnore]
+        public byte[] RawBinaryPayload { get; set; }
+    }
+}
