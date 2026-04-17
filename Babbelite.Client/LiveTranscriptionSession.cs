@@ -7,9 +7,9 @@ namespace Babbelite.Client
 {
     public class LiveTranscriptionSession : IDisposable
     {
-        public BabbeliteClient Client { get; private set; }
+        public BabbeliteConnection Client { get; private set; }
 
-        public LiveTranscriptionSession(BabbeliteClient client)
+        public LiveTranscriptionSession(BabbeliteConnection client)
         {
             this.Client = client;
         }
