@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="Babbelite.Server.CLI/Babbelite.Server.CLI.csproj" />
+  <Project Path="Babbelite.Server.Core/Babbelite.Server.Core.csproj" />
+  <Project Path="Babbelite.Shared/Babbelite.Shared.csproj" />
+</Solution>
