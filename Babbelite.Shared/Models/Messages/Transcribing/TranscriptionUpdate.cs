@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Text.Json.Serialization;
 
 namespace Babbelite.Shared
 {
@@ -10,6 +11,10 @@ namespace Babbelite.Shared
     /// </summary>
     public class TranscriptionUpdate : Response
     {
-
+        /// <summary>
+        /// Unique ID of the session for which the transcription data is
+        /// </summary>
+        [JsonPropertyName("sessionId")]
+        public string SessionId { get; set; }
     }
 }

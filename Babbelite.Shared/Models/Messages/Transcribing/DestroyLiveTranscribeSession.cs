@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Text.Json.Serialization;
 
 namespace Babbelite.Shared
 {
@@ -12,5 +13,10 @@ namespace Babbelite.Shared
     /// </summary>
     public class DestroyLiveTranscribeSession : Message
     {
+        /// <summary>
+        /// Unique ID of the session to destroy
+        /// </summary>
+        [JsonPropertyName("sessionId")]
+        public string SessionId { get; set; }
     }
 }
