@@ -36,7 +36,7 @@ namespace Babbelite.Shared
         [JsonPropertyName("encoding")]
         public AudioDataEncoding Encoding { get; set; }
 
-        public void SetRawAudioData(Span<float> samples)
+        public void SetRawAudioData(ReadOnlySpan<float> samples)
         {
             RawBinaryPayload = new byte[samples.Length * sizeof(float)];
             Encoding = AudioDataEncoding.RawPCM;
@@ -44,7 +44,7 @@ namespace Babbelite.Shared
             samples.CopyTo(MemoryMarshal.Cast<byte, float>(RawBinaryPayload.AsSpan()));
         }
 
-        public Span<float> GetRawAudioData()
+        public ReadOnlySpan<float> GetRawAudioData()
         {
             if (Encoding != AudioDataEncoding.RawPCM)
                 throw new InvalidOperationException("The audio data is not raw PCM");

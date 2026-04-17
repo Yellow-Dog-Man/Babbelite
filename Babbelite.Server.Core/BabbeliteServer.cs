@@ -1,4 +1,5 @@
-﻿using System;
+﻿using EchoSharp.VoiceActivityDetection;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using WatsonWebsocket;
@@ -12,7 +13,15 @@ namespace Babbelite.Server.Core
         // All the currently connected clients to this server
         Dictionary<ClientMetadata, ClientSession> _sessions = new Dictionary<ClientMetadata, ClientSession>();
 
-        public BabbeliteServer(int port)
+        #region TRANSCRIBING
+
+        public WhisperConfig Whisper { get; private set; }
+
+        public IVadDetectorFactory VadDetectorFactory { get; private set; }
+
+        #endregion
+
+        public BabbeliteServer(int port, WhisperConfig whisper)
         {
             _server = new WatsonWsServer("localhost", port);
 
