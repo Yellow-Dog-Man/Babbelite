@@ -44,12 +44,18 @@ namespace Babbelite.Shared
             samples.CopyTo(MemoryMarshal.Cast<byte, float>(RawBinaryPayload.AsSpan()));
         }
 
-        public ReadOnlySpan<float> GetRawAudioData()
+        public ReadOnlyMemory<float> GetRawAudioData()
         {
-            if (Encoding != AudioDataEncoding.RawPCM)
-                throw new InvalidOperationException("The audio data is not raw PCM");
+            switch(Encoding)
+            {
+                case AudioDataEncoding.RawPCM:
+                    // TODO!!! We can't nicely cast ReadOnlyMemory<byte> to ReadOnlyMemory<float>, so we create a copy here
+                    // but we could do it the ugly way and save a little performance. But it might also just not matter enough.
+                    return MemoryMarshal.Cast<byte, float>(RawBinaryPayload.AsSpan()).ToArray();
 
-            return MemoryMarshal.Cast<byte, float>(RawBinaryPayload.AsSpan());
+                default:
+                    throw new NotImplementedException($"Audio encoding not implemented: {Encoding}");
+            }
         }
     }
 }
