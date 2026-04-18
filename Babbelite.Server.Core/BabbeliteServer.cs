@@ -1,4 +1,5 @@
-﻿using EchoSharp.VoiceActivityDetection;
+﻿using Babbelite.Shared;
+using EchoSharp.VoiceActivityDetection;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -47,6 +48,11 @@ namespace Babbelite.Server.Core
         {
             var session = new ClientSession(this);
             _sessions.Add(e.Client, session);
+        }
+
+        internal void SendResponse(Response response)
+        {
+            throw new NotImplementedException();
         }
     }
 }
