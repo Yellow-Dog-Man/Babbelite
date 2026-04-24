@@ -14,6 +14,8 @@ namespace Babbelite.Shared
         /// Optional unique ID of the message. This will be provided in Response to this message.
         /// </summary>
         [JsonPropertyName("messageId")]
-        public string MessageId { get; set; }
+        public string MessageID { get; set; }
+
+        public virtual void Validate() { }
     }
 }

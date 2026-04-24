@@ -18,7 +18,7 @@ namespace Babbelite.Shared
         /// ID of the message to which this response corresponds to (if any)
         /// </summary>
         [JsonPropertyName("sourceMessageId")]
-        public string SourceMessageId { get; set; }
+        public string SourceMessageID { get; set; }
 
         /// <summary>
         /// In case of failure, this contains information on what went wrong.

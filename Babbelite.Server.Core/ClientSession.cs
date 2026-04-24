@@ -88,7 +88,7 @@ namespace Babbelite.Server.Core
             }
 
             // Send the response
-            response.SourceMessageId = sourceMessageId;
+            response.SourceMessageID = sourceMessageId;
 
             Server.SendResponse(response);
         }
