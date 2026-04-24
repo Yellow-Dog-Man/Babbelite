@@ -33,6 +33,8 @@ namespace Babbelite.Client
 
         ConcurrentDictionary<string, TaskCompletionSource<Response>> _pendingResponses = new ConcurrentDictionary<string, TaskCompletionSource<Response>>();
 
+        Dictionary<string, LiveTranscriptionSession> _transcriptionSessions = new Dictionary<string, LiveTranscriptionSession>();
+
         public async Task Connect(Uri target, System.Threading.CancellationToken cancellationToken)
         {
             if (_client != null)
@@ -80,7 +82,12 @@ namespace Babbelite.Client
                             var response = System.Text.Json.JsonSerializer.Deserialize<Response>(
                                 new MemoryStream(buffer, 0, receivedBytes), SerializationOptions);
 
-                            if (_pendingResponses.TryRemove(response.SourceMessageID, out var completion))
+                            if(string.IsNullOrEmpty(response.SourceMessageID))
+                            {
+                                // This is a response without matching source message ID, we need to handle & distribute this properly
+                                RouteResponse(response);
+                            }
+                            else if (_pendingResponses.TryRemove(response.SourceMessageID, out var completion))
                                 completion.SetResult(response);
                             else
                                 throw new Exception("There is no pending response with this ID");
@@ -153,6 +160,31 @@ namespace Babbelite.Client
                 message.MessageID = Guid.NewGuid().ToString();
         }
 
+        void RouteResponse(Response response)
+        {
+            switch(response)
+            {
+                case TranscriptionUpdate transcriptionUpdate:
+                    LiveTranscriptionSession session;
+
+                    lock (_transcriptionSessions)
+                    {
+                        // If the session doesn't exist, ignore this
+                        // Generally this might happen if we dispose of the session, while there's an incoming transcription update
+                        // Since this can go over network, there can be a bit of latency
+                        // There's no harm just throwing away the update in such cases
+                        if (!_transcriptionSessions.TryGetValue(transcriptionUpdate.SessionId, out session))
+                            return;
+                    }
+
+                    session.SendTranscriptionUpdated(transcriptionUpdate.TranscriptionChunk);
+                    break;
+
+                default:
+                    throw new ArgumentException($"Invalid response type to be routed: {response}");
+            }
+        }
+
         #region API
 
         public async Task<LiveTranscriptionSession> CreateTranscriptionSession(string sessionId = null)
@@ -170,9 +202,35 @@ namespace Babbelite.Client
             var response = await SendMessage<CreateLiveTranscribeSession, Response>(createMessage).ConfigureAwait(false);
 
             if (response.IsSuccess)
+            {
+                // Register it, so we can route responses back to it
+                lock (_transcriptionSessions)
+                    _transcriptionSessions.Add(sessionId, session);
+
                 return session;
+            }
             else
                 throw new Exception($"Failed to create transcription session: {response.ErrorMessage}");
+        }
+
+        internal void RemoveTranscriptionSession(LiveTranscriptionSession session)
+        {
+            // Remove it from the collection
+            lock(_transcriptionSessions)
+                _transcriptionSessions.Remove(session.SessionID);
+
+            // Cleanup the session, but don't wait, we don't want to hold up the disposal
+            Task.Run(async () =>
+            {
+                var response = await SendMessage<DestroyLiveTranscribeSession, Response>(new DestroyLiveTranscribeSession()
+                {
+                    SessionId = session.SessionID
+                }).ConfigureAwait(false);
+
+                // TODO!!! We should probably log this somewhere instead, because right now the exception will just get eaten
+                if (!response.IsSuccess)
+                    throw new Exception($"Failed to destroy live transcribe session: {response.ErrorMessage}");
+            });
         }
 
         #endregion

@@ -13,6 +13,9 @@ namespace Babbelite.Client
 
         public bool IsDisposed { get; private set; }
 
+        // This event will be triggered every time there's a transcription update
+        public event Action<TranscriptionChunk> TranscriptionUpdated;
+
         public LiveTranscriptionSession(BabbeliteConnection client, string sessionId)
         {
             this.Client = client;
@@ -21,6 +24,8 @@ namespace Babbelite.Client
 
         public Task PushAudioData(ReadOnlySpan<float> samples)
         {
+            CheckDisposed();
+
             var audioData = new PushLiveTranscribeAudioData();
 
             audioData.SessionId = SessionID;
@@ -39,25 +44,25 @@ namespace Babbelite.Client
             });
         }
 
+        internal void SendTranscriptionUpdated(TranscriptionChunk chunk)
+        {
+            // Just trigger the event
+            TranscriptionUpdated?.Invoke(chunk);
+        }
+
         public void Dispose()
         {
-            if (IsDisposed)
-                throw new InvalidOperationException("This session is already disposed");
+            CheckDisposed();
 
             IsDisposed = true;
 
-            // Cleanup the session, but don't wait, we don't want to hold up the disposal
-            Task.Run(async () =>
-            {
-                var response = await Client.SendMessage<DestroyLiveTranscribeSession, Response>(new DestroyLiveTranscribeSession()
-                {
-                    SessionId = SessionID
-                }).ConfigureAwait(false);
+            Client.RemoveTranscriptionSession(this);
+        }
 
-                // TODO!!! We should probably log this somewhere instead, because right now the exception will just get eaten
-                if (!response.IsSuccess)
-                    throw new Exception($"Failed to destroy live transcribe session: {response.ErrorMessage}");
-            });
+        void CheckDisposed()
+        {
+            if (IsDisposed)
+                throw new InvalidOperationException("This session is has been disposed");
         }
     }
 }
