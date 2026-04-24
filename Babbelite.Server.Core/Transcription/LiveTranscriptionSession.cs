@@ -6,6 +6,7 @@ using EchoSharp.Whisper.net;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace Babbelite.Server.Core
@@ -38,7 +39,7 @@ namespace Babbelite.Server.Core
             {
                 BitsPerSample = sizeof(float),
                 Channels = 1,
-                SampleRate = 16000
+                SampleRate = 16000,
             });
 
             _whisperFactory = new WhisperSpeechTranscriptorFactory(Server.Whisper.ModelPath);
@@ -68,7 +69,14 @@ namespace Babbelite.Server.Core
             if (_cancellation.IsCancellationRequested)
                 return;
 
-            _source.AddFrame(data);
+            // Frame is essentially just a single "sample"
+            // Since we don't do any stereo processing at this point, just add them individually
+            // TODO!!! Create custom audio source that is more efficient that doesn't require this kind of slicing?
+            // This should be fast enough, but still...
+            for(int i = 0; i < data.Length; i++)
+                _source.AddFrame(data.Slice(i, 1));
+
+            _source.NotifyNewSamples();
         }
 
         public void Dispose()
