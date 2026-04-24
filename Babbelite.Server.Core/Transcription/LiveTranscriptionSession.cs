@@ -13,7 +13,11 @@ namespace Babbelite.Server.Core
 {
     public class LiveTranscriptionSession : IDisposable
     {
+        public const int SAMPLE_RATE = 16000;
+
         public string SessionId { get; private set; }
+
+        public int SampleRate => SAMPLE_RATE;
 
         public BabbeliteServer Server => _clientSession.Server;
         readonly ClientSession _clientSession;
@@ -39,7 +43,7 @@ namespace Babbelite.Server.Core
             {
                 BitsPerSample = sizeof(float),
                 Channels = 1,
-                SampleRate = 16000,
+                SampleRate = SAMPLE_RATE,
             });
 
             _whisperFactory = new WhisperSpeechTranscriptorFactory(Server.Whisper.ModelPath);

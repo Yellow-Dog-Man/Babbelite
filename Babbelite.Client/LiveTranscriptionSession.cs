@@ -10,16 +10,18 @@ namespace Babbelite.Client
     {
         public BabbeliteConnection Client { get; private set; }
         public string SessionID { get; private set; }
+        public int SampleRate { get; private set; }
 
         public bool IsDisposed { get; private set; }
 
         // This event will be triggered every time there's a transcription update
         public event Action<TranscriptionChunk> TranscriptionUpdated;
 
-        public LiveTranscriptionSession(BabbeliteConnection client, string sessionId)
+        public LiveTranscriptionSession(BabbeliteConnection client, string sessionId, int sampleRate)
         {
             this.Client = client;
             this.SessionID = sessionId;
+            this.SampleRate = sampleRate;
         }
 
         public Task PushAudioData(ReadOnlySpan<float> samples)

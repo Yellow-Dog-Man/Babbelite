@@ -105,8 +105,7 @@ namespace Babbelite.Server.Core
             switch(message)
             {
                 case CreateLiveTranscribeSession createLiveTranscribe:
-                    CreateLiveTranscribeSession(createLiveTranscribe);
-                    break;
+                    return CreateLiveTranscribeSession(createLiveTranscribe);
 
                 case DestroyLiveTranscribeSession destroyLiveTranscribeSession:
                     DestroyLiveTranscribeSession(destroyLiveTranscribeSession);
@@ -125,7 +124,7 @@ namespace Babbelite.Server.Core
             };
         }
 
-        void CreateLiveTranscribeSession(CreateLiveTranscribeSession message)
+        TranscribeSessionCreated CreateLiveTranscribeSession(CreateLiveTranscribeSession message)
         {
             if (string.IsNullOrWhiteSpace(message.SessionId))
                 throw new ArgumentException("SessionId must be specified");
@@ -136,6 +135,12 @@ namespace Babbelite.Server.Core
             var session = new LiveTranscriptionSession(message.SessionId, this);
 
             _transcribeSessions.Add(message.SessionId, session);
+
+            return new TranscribeSessionCreated()
+            {
+                SessionId = message.SessionId,
+                SampleRate = session.SampleRate
+            };
         }
 
         void DestroyLiveTranscribeSession(DestroyLiveTranscribeSession message)

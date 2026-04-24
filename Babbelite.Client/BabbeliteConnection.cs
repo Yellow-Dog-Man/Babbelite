@@ -185,17 +185,17 @@ namespace Babbelite.Client
             if (string.IsNullOrWhiteSpace(sessionId))
                 sessionId = Guid.NewGuid().ToString();
 
-            var session = new LiveTranscriptionSession(this, sessionId);
-
             var createMessage = new CreateLiveTranscribeSession()
             {
                 SessionId = sessionId,
             };
 
-            var response = await SendMessage<CreateLiveTranscribeSession, Response>(createMessage).ConfigureAwait(false);
+            var response = await SendMessage<CreateLiveTranscribeSession, TranscribeSessionCreated>(createMessage).ConfigureAwait(false);
 
             if (response.IsSuccess)
             {
+                var session = new LiveTranscriptionSession(this, response.SessionId, response.SampleRate);
+
                 // Register it, so we can route responses back to it
                 lock (_transcriptionSessions)
                     _transcriptionSessions.Add(sessionId, session);
