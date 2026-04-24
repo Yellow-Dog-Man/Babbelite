@@ -32,5 +32,7 @@ namespace Babbelite.Shared
         /// </summary>
         [JsonPropertyName("languageCode")]
         public string LanguageCode { get; set; }
+
+        public override string ToString() => $"[Lang: {LanguageCode}, Confidence: {ConfidenceLevel:P0}, Completed: {IsCompleted}] {Text}";
     }
 }

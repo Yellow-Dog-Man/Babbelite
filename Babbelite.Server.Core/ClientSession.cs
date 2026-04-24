@@ -74,6 +74,7 @@ namespace Babbelite.Server.Core
                         break;
 
                     case System.Net.WebSockets.WebSocketMessageType.Close:
+                        Console.WriteLine($"Client closing session: {Client}");
                         // TODO!!!
                         return;
 
@@ -83,6 +84,8 @@ namespace Babbelite.Server.Core
             }
             catch(Exception ex)
             {
+                Console.WriteLine($"Exception handling websocket message for client {Client}:\n{ex}");
+
                 // Something went wrong! Send not-ok response
                 response = new Response()
                 {
@@ -167,6 +170,8 @@ namespace Babbelite.Server.Core
 
         public void Dispose()
         {
+            Console.WriteLine($"Disposing of client session: {Client}");
+
             // Dispose all the active sessions if there are any left
             foreach (var session in _transcribeSessions)
                 session.Value.Dispose();

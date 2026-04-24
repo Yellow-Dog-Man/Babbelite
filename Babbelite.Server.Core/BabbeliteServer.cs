@@ -15,6 +15,12 @@ namespace Babbelite.Server.Core
         // All the currently connected clients to this server
         Dictionary<ClientMetadata, ClientSession> _sessions = new Dictionary<ClientMetadata, ClientSession>();
 
+        #region CONNECTION
+
+        public int Port { get; private set; }
+
+        #endregion
+
         #region TRANSCRIBING
 
         public WhisperConfig Whisper { get; private set; }
@@ -22,30 +28,48 @@ namespace Babbelite.Server.Core
 
         #endregion
 
-        public BabbeliteServer(int port, WhisperConfig whisper)
+        public BabbeliteServer(int port, WhisperConfig whisper, IVadDetectorFactory vadDetector)
         {
+            this.Port = port;
+
             _server = new WatsonWsServer("localhost", port);
 
             _server.ClientConnected += ClientConnected;
             _server.ClientDisconnected += ClientDisconnected;
             _server.MessageReceived += MessageReceived;
 
+            _server.Logger += msg => Console.WriteLine($"WS: {msg}");
+
             _server.Start();
+
+            this.Whisper = whisper;
+            this.VadDetectorFactory = vadDetector;
         }
 
         void MessageReceived(object? sender, MessageReceivedEventArgs e)
         {
-            _sessions[e.Client].HandleMessage(e);
+            try
+            {
+                _sessions[e.Client].HandleMessage(e);
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine($"EXCEPTION handling message:\n{ex}");
+            }
         }
 
         void ClientDisconnected(object? sender, DisconnectionEventArgs e)
         {
+            Console.WriteLine($"Client disconnected: {e.Client}\n" + Environment.StackTrace);
+
             _sessions[e.Client].Dispose();
             _sessions.Remove(e.Client);
         }
 
         void ClientConnected(object? sender, ConnectionEventArgs e)
         {
+            Console.WriteLine($"Client connected: {e.Client}");
+
             var session = new ClientSession(this, e.Client);
             _sessions.Add(e.Client, session);
         }
@@ -54,9 +78,15 @@ namespace Babbelite.Server.Core
         {
             Task.Run(async () =>
             {
-                // TODO!!! Log this? Right now this will get silently eaten
-                if (await SendResponseAsync(session, response).ConfigureAwait(false))
-                    throw new Exception($"Response {response} failed to send");
+                try
+                {
+                    if (!await SendResponseAsync(session, response).ConfigureAwait(false))
+                        throw new Exception($"Response {response} failed to send");
+                }
+                catch(Exception ex)
+                {
+                    Console.WriteLine($"Failed to send response: {response}\n{ex}");
+                }
             });
         }
 

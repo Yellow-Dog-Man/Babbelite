@@ -29,6 +29,8 @@ namespace Babbelite.Server.Core
         {
             SessionId = sessionId;
 
+            Console.WriteLine($"Creating LiveTranscriptionSession. ID: {SessionId}");
+
             _clientSession = clientSession;
 
             _source = new AwaitableAudioSource();
@@ -71,6 +73,8 @@ namespace Babbelite.Server.Core
 
         public void Dispose()
         {
+            Console.WriteLine($"Disposing of LiveTranscriptionSession: {SessionId}");
+
             _cancellation.Cancel();
         }
 
@@ -105,6 +109,8 @@ namespace Babbelite.Server.Core
             {
                 Console.WriteLine($"Exception when running transcription in session {SessionId}\n{ex}");
             }
+
+            Console.WriteLine($"Cleaning up LiveTranscriptionSession. ID: {SessionId}");
 
             // Cleanup here. We want to do this here rather in Dispose(), so any remainder processing actually finishes
             _source.Dispose();
