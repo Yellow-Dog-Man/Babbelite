@@ -148,6 +148,9 @@ namespace Babbelite.Server.Core
 
             update.TranscriptionChunk = chunk;
 
+            if (chunk.ConfidenceLevel == null || chunk.ConfidenceLevel == 0)
+                chunk.ConfidenceLevel = segment.Tokens?.Average(t => t.Confidence ?? 0) ?? 0;
+
             _clientSession.SendResponse(update);
         }
     }
