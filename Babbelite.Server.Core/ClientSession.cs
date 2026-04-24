@@ -37,6 +37,8 @@ namespace Babbelite.Server.Core
 
                         try
                         {
+                            sourceMessageId = _waitingBinaryPayload.MessageID;
+
                             _waitingBinaryPayload.RawBinaryPayload = message.Data.ToArray();
                             response = ProcessMessage(_waitingBinaryPayload);
                         }
