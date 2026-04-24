@@ -3,6 +3,7 @@ using EchoSharp.VoiceActivityDetection;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading.Tasks.Dataflow;
 using WatsonWebsocket;
 
 namespace Babbelite.Server.Core
@@ -17,7 +18,6 @@ namespace Babbelite.Server.Core
         #region TRANSCRIBING
 
         public WhisperConfig Whisper { get; private set; }
-
         public IVadDetectorFactory VadDetectorFactory { get; private set; }
 
         #endregion
@@ -46,13 +46,25 @@ namespace Babbelite.Server.Core
 
         void ClientConnected(object? sender, ConnectionEventArgs e)
         {
-            var session = new ClientSession(this);
+            var session = new ClientSession(this, e.Client);
             _sessions.Add(e.Client, session);
         }
 
-        internal void SendResponse(Response response)
+        internal void SendResponse(ClientSession session, Response response)
         {
-            throw new NotImplementedException();
+            Task.Run(async () =>
+            {
+                // TODO!!! Log this? Right now this will get silently eaten
+                if (await SendResponseAsync(session, response).ConfigureAwait(false))
+                    throw new Exception($"Response {response} failed to send");
+            });
+        }
+
+        internal Task<bool> SendResponseAsync(ClientSession session, Response response)
+        {
+            var json = System.Text.Json.JsonSerializer.Serialize(response, SerializationHelper.SerializationOptions);
+
+            return _server.SendAsync(session.Client.Guid, json);
         }
     }
 }

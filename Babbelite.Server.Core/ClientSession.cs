@@ -9,10 +9,12 @@ namespace Babbelite.Server.Core
     public class ClientSession : IDisposable
     {
         public BabbeliteServer Server { get; private set; }
+        public ClientMetadata Client { get; private set; }
 
-        public ClientSession(BabbeliteServer server)
+        public ClientSession(BabbeliteServer server, ClientMetadata client)
         {
             this.Server = server;
+            this.Client = client;
         }
 
         // All live transcription sessions
@@ -51,7 +53,7 @@ namespace Babbelite.Server.Core
                             throw new InvalidOperationException("Failed to deserialize message");
 
                         // Store if for later assignment
-                        sourceMessageId = deserializedMessage.MessageId;
+                        sourceMessageId = deserializedMessage.MessageID;
 
                         // If it's a binary payload message, we need to defer processing until we get the binary payload
                         if (deserializedMessage is BinaryPayloadMessage binaryPayload)
@@ -90,7 +92,7 @@ namespace Babbelite.Server.Core
             // Send the response
             response.SourceMessageID = sourceMessageId;
 
-            Server.SendResponse(response);
+            SendResponse(response);
         }
 
         Response ProcessMessage(Message message)
@@ -126,7 +128,7 @@ namespace Babbelite.Server.Core
             if (_transcribeSessions.ContainsKey(message.SessionId))
                 throw new InvalidOperationException("SessionId is already in use");
 
-            var session = new LiveTranscriptionSession(message.SessionId, Server);
+            var session = new LiveTranscriptionSession(message.SessionId, this);
 
             _transcribeSessions.Add(message.SessionId, session);
         }
@@ -154,6 +156,11 @@ namespace Babbelite.Server.Core
                 throw new InvalidOperationException("There is no session with given SessionId");
 
             session.PushAudioData(message.GetRawAudioData());
+        }
+
+        internal void SendResponse(Response response)
+        {
+            Server.SendResponse(this, response);
         }
 
         public void Dispose()

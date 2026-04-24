@@ -16,13 +16,6 @@ namespace Babbelite.Client
 {
     public class BabbeliteConnection
     {
-        public static readonly JsonSerializerOptions SerializationOptions = new JsonSerializerOptions()
-        {
-            // Necessary for values like Infinity, NaN and so on
-            NumberHandling = System.Text.Json.Serialization.JsonNumberHandling.AllowNamedFloatingPointLiterals,
-            AllowOutOfOrderMetadataProperties = true,
-        };
-
         const int DEFAULT_BUFFER_SIZE = 1024 * 1024 * 2; // 2 MB
 
         public bool IsConnected => _client?.State == WebSocketState.Open;
@@ -80,7 +73,7 @@ namespace Babbelite.Client
                     {
                         case WebSocketMessageType.Text:
                             var response = System.Text.Json.JsonSerializer.Deserialize<Response>(
-                                new MemoryStream(buffer, 0, receivedBytes), SerializationOptions);
+                                new MemoryStream(buffer, 0, receivedBytes), SerializationHelper.SerializationOptions);
 
                             if(string.IsNullOrEmpty(response.SourceMessageID))
                             {
@@ -138,7 +131,7 @@ namespace Babbelite.Client
             if (!_pendingResponses.TryAdd(message.MessageID, responseCompletion))
                 throw new InvalidOperationException("Failed to register MessageID. Did you provide duplicate MessageID?");
 
-            var jsonData = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes((Message)message, SerializationOptions);
+            var jsonData = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes((Message)message, SerializationHelper.SerializationOptions);
 
             await _client.SendAsync(new ArraySegment<byte>(jsonData),
                 WebSocketMessageType.Text, true, _cancellation.Token);

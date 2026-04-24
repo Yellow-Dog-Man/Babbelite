@@ -14,7 +14,8 @@ namespace Babbelite.Server.Core
     {
         public string SessionId { get; private set; }
 
-        BabbeliteServer _server;
+        public BabbeliteServer Server => _clientSession.Server;
+        readonly ClientSession _clientSession;
 
         WhisperSpeechTranscriptorFactory _whisperFactory;
         EchoSharpRealtimeTranscriptorFactory _transcriptorFactory;
@@ -24,11 +25,11 @@ namespace Babbelite.Server.Core
 
         CancellationTokenSource _cancellation;
 
-        public LiveTranscriptionSession(string sessionId, BabbeliteServer server)
+        public LiveTranscriptionSession(string sessionId, ClientSession clientSession)
         {
             SessionId = sessionId;
 
-            _server = server;
+            _clientSession = clientSession;
 
             _source = new AwaitableAudioSource();
             _source.Initialize(new AudioSourceHeader()
@@ -38,8 +39,8 @@ namespace Babbelite.Server.Core
                 SampleRate = 16000
             });
 
-            _whisperFactory = new WhisperSpeechTranscriptorFactory(server.Whisper.ModelPath);
-            _transcriptorFactory = new EchoSharpRealtimeTranscriptorFactory(_whisperFactory, server.VadDetectorFactory, echoSharpOptions: new EchoSharpRealtimeOptions()
+            _whisperFactory = new WhisperSpeechTranscriptorFactory(Server.Whisper.ModelPath);
+            _transcriptorFactory = new EchoSharpRealtimeTranscriptorFactory(_whisperFactory, Server.VadDetectorFactory, echoSharpOptions: new EchoSharpRealtimeOptions()
             {
                 ConcatenateSegmentsToPrompt = false,
             });
@@ -122,13 +123,18 @@ namespace Babbelite.Server.Core
             update.IsSuccess = true;
 
             update.SessionId = SessionId;
-            update.IsCompleted = isCompleted;
 
-            update.Text = segment.Text;
-            update.ConfidenceLevel = segment.ConfidenceLevel;
-            update.LanguageCode = segment.Language?.Name;
+            var chunk = new TranscriptionChunk();
 
-            _server.SendResponse(update);
+            chunk.IsCompleted = isCompleted;
+
+            chunk.Text = segment.Text;
+            chunk.ConfidenceLevel = segment.ConfidenceLevel;
+            chunk.LanguageCode = segment.Language?.Name;
+
+            update.TranscriptionChunk = chunk;
+
+            _clientSession.SendResponse(update);
         }
     }
 }
