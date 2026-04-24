@@ -19,6 +19,8 @@ namespace Babbelite.Client
         const int DEFAULT_BUFFER_SIZE = 1024 * 1024 * 2; // 2 MB
 
         public bool IsConnected => _client?.State == WebSocketState.Open;
+        public int TranscriptionSessionCount => _transcriptionSessions.Count;
+
         public Exception FailureException { get; private set; }
 
         ClientWebSocket _client;
