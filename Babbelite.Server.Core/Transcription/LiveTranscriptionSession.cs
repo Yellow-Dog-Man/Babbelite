@@ -117,7 +117,11 @@ namespace Babbelite.Server.Core
                     }
                 }
             }
-            catch(Exception ex)
+            catch (TaskCanceledException)
+            {
+                // This is fine, normal cancellation, we don't need to log anything extra for it
+            }
+            catch (Exception ex)
             {
                 Console.WriteLine($"Exception when running transcription in session {SessionId}\n{ex}");
             }
