@@ -139,7 +139,8 @@ namespace Babbelite.Server.Core
             return new TranscribeSessionCreated()
             {
                 SessionId = message.SessionId,
-                SampleRate = session.SampleRate
+                SampleRate = session.SampleRate,
+                IsSuccess = true
             };
         }
 

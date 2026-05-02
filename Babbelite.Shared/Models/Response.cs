@@ -5,6 +5,7 @@ using System.Text.Json.Serialization;
 
 namespace Babbelite.Shared
 {
+    [JsonDerivedType(typeof(TranscribeSessionCreated), "transcriptionCreated")]
     [JsonDerivedType(typeof(TranscriptionUpdate), "transcriptionUpdate")]
     public class Response
     {
