@@ -12,14 +12,24 @@ namespace Babbelite.Client
         // Connections to Babbelite servers
         List<BabbeliteConnection> _connections = new List<BabbeliteConnection>();
 
-        public async Task<LiveTranscriptionSession> CreateTranscriptionSession()
+        public async Task ConnectTo(Uri uri, CancellationToken token)
+        {
+            var connection = new BabbeliteConnection();
+
+            await connection.Connect(uri, token);
+
+            lock (_connections)
+                _connections.Add(connection);
+        }
+
+        public async Task<LiveTranscriptionSession> CreateTranscriptionSession(string customId = null)
         {
             var connection = FindBestConnection();
 
             if (connection == null)
                 throw new InvalidOperationException($"Could not find a free Babbelite server connection");
 
-            return await connection.CreateTranscriptionSession();
+            return await connection.CreateTranscriptionSession(customId);
         }
 
         BabbeliteConnection FindBestConnection()
