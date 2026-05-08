@@ -26,6 +26,8 @@ namespace Babbelite.Client
         ClientWebSocket _client;
         CancellationTokenSource _cancellation;
 
+        SemaphoreSlim _semaphore;
+
         ConcurrentDictionary<string, TaskCompletionSource<Response>> _pendingResponses = new ConcurrentDictionary<string, TaskCompletionSource<Response>>();
 
         Dictionary<string, LiveTranscriptionSession> _transcriptionSessions = new Dictionary<string, LiveTranscriptionSession>();
@@ -38,6 +40,8 @@ namespace Babbelite.Client
             _client = new ClientWebSocket();
 
             _cancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+
+            _semaphore = new SemaphoreSlim(1, 1);
 
             await _client.ConnectAsync(target, _cancellation.Token);
 
@@ -135,14 +139,23 @@ namespace Babbelite.Client
 
             var jsonData = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes((Message)message, SerializationHelper.SerializationOptions);
 
-            await _client.SendAsync(new ArraySegment<byte>(jsonData),
-                WebSocketMessageType.Text, true, _cancellation.Token);
+            await _semaphore.WaitAsync().ConfigureAwait(false);
 
-            if (message is BinaryPayloadMessage binaryPayload)
+            try
             {
-                // We must send the binary payload as well following the message
-                await _client.SendAsync(new ArraySegment<byte>(binaryPayload.RawBinaryPayload), WebSocketMessageType.Binary, true,
-                    _cancellation.Token);
+                await _client.SendAsync(new ArraySegment<byte>(jsonData),
+                    WebSocketMessageType.Text, true, _cancellation.Token);
+
+                if (message is BinaryPayloadMessage binaryPayload)
+                {
+                    // We must send the binary payload as well following the message
+                    await _client.SendAsync(new ArraySegment<byte>(binaryPayload.RawBinaryPayload), WebSocketMessageType.Binary, true,
+                        _cancellation.Token);
+                }
+            }
+            finally
+            {
+                _semaphore.Release();
             }
 
             // Wait for response to arrive and cast it to the target type if compatible
