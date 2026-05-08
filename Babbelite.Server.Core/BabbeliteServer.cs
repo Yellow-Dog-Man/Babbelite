@@ -23,13 +23,16 @@ namespace Babbelite.Server.Core
 
         #region TRANSCRIBING
 
-        public WhisperConfig Whisper { get; private set; }
-        public IVadDetectorFactory VadDetectorFactory { get; private set; }
+        public Config Config { get; private set; }
+        public TranscriptionService Transcription { get; private set; }
 
         #endregion
 
-        public BabbeliteServer(int port, WhisperConfig whisper, IVadDetectorFactory vadDetector)
+        public BabbeliteServer(int port, Config config)
         {
+            if (config == null)
+                throw new ArgumentNullException(nameof(config));
+
             this.Port = port;
 
             _server = new WatsonWsServer("localhost", port);
@@ -42,8 +45,28 @@ namespace Babbelite.Server.Core
 
             _server.Start();
 
-            this.Whisper = whisper;
-            this.VadDetectorFactory = vadDetector;
+            this.Config = config;
+
+            
+        }
+
+        void Initialize()
+        {
+            InitializeTranscription(Config.Transcription);
+        }
+
+        void InitializeTranscription(TranscriptionConfig config)
+        {
+            switch(config)
+            {
+                case WhisperConfig whisper:
+                    Transcription = new WhisperTranscriptionService(whisper);
+                    break;
+
+                case null:
+                    Console.WriteLine($"No transcription service configured");
+                    break;
+            }
         }
 
         void MessageReceived(object? sender, MessageReceivedEventArgs e)

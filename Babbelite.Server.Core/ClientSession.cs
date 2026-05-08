@@ -132,7 +132,7 @@ namespace Babbelite.Server.Core
             if (_transcribeSessions.ContainsKey(message.SessionId))
                 throw new InvalidOperationException("SessionId is already in use");
 
-            var session = new LiveTranscriptionSession(message.SessionId, this);
+            var session = Server.Transcription.CreateLiveTranscriptionSession(message.SessionId, this);
 
             _transcribeSessions.Add(message.SessionId, session);
 

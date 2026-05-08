@@ -1,5 +1,6 @@
 <Solution>
   <Project Path="Babbelite.Client/Babbelite.Client.csproj" Id="bf511d3d-6550-4261-9a8c-ca74b6c1a054" />
+  <Project Path="Babbelite.Example/Babbelite.Example.csproj" Id="b021437a-3bfc-4ea0-b3f6-5f0ef46b6d9a" />
   <Project Path="Babbelite.Server.CLI/Babbelite.Server.CLI.csproj" />
   <Project Path="Babbelite.Server.Core/Babbelite.Server.Core.csproj" />
   <Project Path="Babbelite.Shared/Babbelite.Shared.csproj" />

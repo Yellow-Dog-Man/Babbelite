@@ -20,4 +20,8 @@
     <ProjectReference Include="..\Babbelite.Shared\Babbelite.Shared.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Config\Translation\" />
+  </ItemGroup>
+
 </Project>
