@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading.Tasks.Dataflow;
 using WatsonWebsocket;
 
 namespace Babbelite.Server.Core
@@ -15,6 +16,13 @@ namespace Babbelite.Server.Core
         {
             this.Server = server;
             this.Client = client;
+
+            _messageHandler = new ActionBlock<MessageReceivedEventArgs>(HandleMessage,
+                new ExecutionDataflowBlockOptions()
+                {
+                    MaxDegreeOfParallelism = 1,
+                    EnsureOrdered = true
+                });
         }
 
         // All live transcription sessions
@@ -22,82 +30,96 @@ namespace Babbelite.Server.Core
 
         BinaryPayloadMessage _waitingBinaryPayload;
 
+        ActionBlock<MessageReceivedEventArgs> _messageHandler;
+
+        public void EnqueueMessageForProcessing(MessageReceivedEventArgs message)
+        {
+            _messageHandler.Post(message);
+        }
+
         public async Task HandleMessage(MessageReceivedEventArgs message)
         {
-            string sourceMessageId = null;
-            Response response;
-
             try
             {
-                switch (message.MessageType)
+                string sourceMessageId = null;
+                Response response;
+
+                try
                 {
-                    case System.Net.WebSockets.WebSocketMessageType.Binary:
-                        if (_waitingBinaryPayload == null)
-                            throw new InvalidOperationException($"Unexpected binary message");
+                    switch (message.MessageType)
+                    {
+                        case System.Net.WebSockets.WebSocketMessageType.Binary:
+                            if (_waitingBinaryPayload == null)
+                                throw new InvalidOperationException($"Unexpected binary message");
 
-                        try
-                        {
-                            sourceMessageId = _waitingBinaryPayload.MessageID;
+                            try
+                            {
+                                sourceMessageId = _waitingBinaryPayload.MessageID;
 
-                            _waitingBinaryPayload.RawBinaryPayload = message.Data.ToArray();
-                            response = await ProcessMessage(_waitingBinaryPayload);
-                        }
-                        finally
-                        {
-                            _waitingBinaryPayload = null;
-                        }
-                        break;
-
-                    case System.Net.WebSockets.WebSocketMessageType.Text:
-                        var deserializedMessage = System.Text.Json.JsonSerializer.Deserialize<Message>(message.Data);
-
-                        if (deserializedMessage == null)
-                            throw new InvalidOperationException("Failed to deserialize message");
-
-                        // Store if for later assignment
-                        sourceMessageId = deserializedMessage.MessageID;
-
-                        // If it's a binary payload message, we need to defer processing until we get the binary payload
-                        if (deserializedMessage is BinaryPayloadMessage binaryPayload)
-                        {
-                            if (_waitingBinaryPayload != null)
+                                _waitingBinaryPayload.RawBinaryPayload = message.Data.ToArray();
+                                response = await ProcessMessage(_waitingBinaryPayload);
+                            }
+                            finally
                             {
                                 _waitingBinaryPayload = null;
-                                throw new InvalidOperationException("Already expecting binary payload message, but got another text message instead");
                             }
+                            break;
 
-                            _waitingBinaryPayload = binaryPayload;
+                        case System.Net.WebSockets.WebSocketMessageType.Text:
+                            var deserializedMessage = System.Text.Json.JsonSerializer.Deserialize<Message>(message.Data);
+
+                            if (deserializedMessage == null)
+                                throw new InvalidOperationException("Failed to deserialize message");
+
+                            // Store if for later assignment
+                            sourceMessageId = deserializedMessage.MessageID;
+
+                            // If it's a binary payload message, we need to defer processing until we get the binary payload
+                            if (deserializedMessage is BinaryPayloadMessage binaryPayload)
+                            {
+                                if (_waitingBinaryPayload != null)
+                                {
+                                    _waitingBinaryPayload = null;
+                                    throw new InvalidOperationException("Already expecting binary payload message, but got another text message instead");
+                                }
+
+                                _waitingBinaryPayload = binaryPayload;
+                                return;
+                            }
+                            else
+                                response = await ProcessMessage(deserializedMessage);
+                            break;
+
+                        case System.Net.WebSockets.WebSocketMessageType.Close:
+                            Console.WriteLine($"Client closing session: {Client}");
+                            // TODO!!!
                             return;
-                        }
-                        else
-                            response = await ProcessMessage(deserializedMessage);
-                        break;
 
-                    case System.Net.WebSockets.WebSocketMessageType.Close:
-                        Console.WriteLine($"Client closing session: {Client}");
-                        // TODO!!!
-                        return;
-
-                    default:
-                        throw new NotImplementedException("Unhandled WebSocket Message Type: " + message.MessageType);
+                        default:
+                            throw new NotImplementedException("Unhandled WebSocket Message Type: " + message.MessageType);
+                    }
                 }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Exception handling websocket message for client {Client}:\n{ex}");
+
+                    // Something went wrong! Send not-ok response
+                    response = new Response()
+                    {
+                        IsSuccess = false,
+                        ErrorMessage = ex.Message
+                    };
+                }
+
+                // Send the response
+                response.SourceMessageID = sourceMessageId;
+
+                SendResponse(response);
             }
             catch(Exception ex)
             {
-                Console.WriteLine($"Exception handling websocket message for client {Client}:\n{ex}");
-
-                // Something went wrong! Send not-ok response
-                response = new Response()
-                {
-                    IsSuccess = false,
-                    ErrorMessage = ex.Message
-                };
+                Console.WriteLine($"Exception processing message:\n{ex}");
             }
-
-            // Send the response
-            response.SourceMessageID = sourceMessageId;
-
-            SendResponse(response);
         }
 
         async ValueTask<Response> ProcessMessage(Message message)

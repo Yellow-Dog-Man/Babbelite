@@ -85,6 +85,7 @@ namespace Babbelite.Server.Core
             switch(config)
             {
                 case LibreTranslateConfig libreTranslate:
+                    Translation = new LibreTranslateTranslationService(libreTranslate);
                     break;
 
                 case null:
@@ -98,18 +99,7 @@ namespace Babbelite.Server.Core
 
         void MessageReceived(object? sender, MessageReceivedEventArgs e)
         {
-            // TODO!!! Use ActionBlock?
-            Task.Run(async () =>
-            {
-                try
-                {
-                    await _sessions[e.Client].HandleMessage(e).ConfigureAwait(false);
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"EXCEPTION handling message:\n{ex}");
-                }
-            });
+            _sessions[e.Client].EnqueueMessageForProcessing(e);
         }
 
         void ClientDisconnected(object? sender, DisconnectionEventArgs e)
