@@ -98,14 +98,18 @@ namespace Babbelite.Server.Core
 
         void MessageReceived(object? sender, MessageReceivedEventArgs e)
         {
-            try
+            // TODO!!! Use ActionBlock?
+            Task.Run(async () =>
             {
-                _sessions[e.Client].HandleMessage(e);
-            }
-            catch(Exception ex)
-            {
-                Console.WriteLine($"EXCEPTION handling message:\n{ex}");
-            }
+                try
+                {
+                    await _sessions[e.Client].HandleMessage(e).ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"EXCEPTION handling message:\n{ex}");
+                }
+            });
         }
 
         void ClientDisconnected(object? sender, DisconnectionEventArgs e)

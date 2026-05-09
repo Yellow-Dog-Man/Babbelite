@@ -251,6 +251,22 @@ namespace Babbelite.Client
             });
         }
 
+        public async Task<string> TranslateText(string text, string sourceLanguage, string targetLanguage)
+        {
+            var message = new TranslateText();
+
+            message.Text = text;
+            message.SourceLanguage = sourceLanguage;
+            message.TargetLangoage = targetLanguage;
+
+            var response = await SendMessage<TranslateText, TranslatedText>(message).ConfigureAwait(false);
+
+            if (response.IsSuccess)
+                return response.Text;
+            else
+                throw new Exception($"Failed to translate text: {response.ErrorMessage}");
+        }
+
         #endregion
     }
 }

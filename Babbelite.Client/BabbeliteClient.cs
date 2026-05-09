@@ -66,6 +66,16 @@ namespace Babbelite.Client
             return await connection.CreateTranscriptionSession(customId);
         }
 
+        public async Task<string> TranslateText(string text, string sourceLanguage, string targetLanguage)
+        {
+            var connection = FindBestConnection();
+
+            if (connection == null)
+                throw new InvalidOperationException($"Could not find a free Babbelite server connection");
+
+            return await connection.TranslateText(text, sourceLanguage, targetLanguage).ConfigureAwait(false);
+        }
+
         BabbeliteConnection FindBestConnection()
         {
             if (_connections.Count == 0)

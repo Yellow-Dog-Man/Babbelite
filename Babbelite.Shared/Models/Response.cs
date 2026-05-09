@@ -7,6 +7,8 @@ namespace Babbelite.Shared
 {
     [JsonDerivedType(typeof(TranscribeSessionCreated), "transcriptionCreated")]
     [JsonDerivedType(typeof(TranscriptionUpdate), "transcriptionUpdate")]
+
+    [JsonDerivedType(typeof(TranslatedText), "translatedText")]
     public class Response
     {
         /// <summary>

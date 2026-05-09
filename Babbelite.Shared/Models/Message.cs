@@ -8,6 +8,8 @@ namespace Babbelite.Shared
     [JsonDerivedType(typeof(CreateLiveTranscribeSession), "createLiveTranscribeSession")]
     [JsonDerivedType(typeof(DestroyLiveTranscribeSession), "destroyLiveTranscribeSession")]
     [JsonDerivedType(typeof(PushLiveTranscribeAudioData), "pushLiveTranscribeAudioData")]
+
+    [JsonDerivedType(typeof(TranslateText), "translateText")]
     public abstract class Message
     {
         /// <summary>

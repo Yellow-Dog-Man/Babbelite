@@ -14,22 +14,14 @@ namespace Babbelite.Server.Core
             _translator = new LibreTranslate.Net.Enhanced.LibreTranslate(config.HostURL, config.ApiKey);
         }
 
-        public override async Task<string> Translate(string text, string sourceLanguage, string targetLanguage)
+        protected override async Task<string> Translate(string text, string sourceLanguage, string targetLanguage)
         {
-            try
+            return await _translator.TranslateAsync(new LibreTranslate.Net.Enhanced.Models.Translate()
             {
-                return await _translator.TranslateAsync(new LibreTranslate.Net.Enhanced.Models.Translate()
-                {
-                    Source = sourceLanguage,
-                    Target = targetLanguage,
-                    Text = text
-                });
-            }
-            catch(Exception ex)
-            {
-                Console.WriteLine($"Exception translating {sourceLanguage} -> {targetLanguage}\n{ex}");
-                return ex.Message;
-            }
+                Source = sourceLanguage,
+                Target = targetLanguage,
+                Text = text
+            });
         }
     }
 }

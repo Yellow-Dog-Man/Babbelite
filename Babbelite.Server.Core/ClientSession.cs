@@ -22,7 +22,7 @@ namespace Babbelite.Server.Core
 
         BinaryPayloadMessage _waitingBinaryPayload;
 
-        public void HandleMessage(MessageReceivedEventArgs message)
+        public async Task HandleMessage(MessageReceivedEventArgs message)
         {
             string sourceMessageId = null;
             Response response;
@@ -40,7 +40,7 @@ namespace Babbelite.Server.Core
                             sourceMessageId = _waitingBinaryPayload.MessageID;
 
                             _waitingBinaryPayload.RawBinaryPayload = message.Data.ToArray();
-                            response = ProcessMessage(_waitingBinaryPayload);
+                            response = await ProcessMessage(_waitingBinaryPayload);
                         }
                         finally
                         {
@@ -70,7 +70,7 @@ namespace Babbelite.Server.Core
                             return;
                         }
                         else
-                            response = ProcessMessage(deserializedMessage);
+                            response = await ProcessMessage(deserializedMessage);
                         break;
 
                     case System.Net.WebSockets.WebSocketMessageType.Close:
@@ -100,7 +100,7 @@ namespace Babbelite.Server.Core
             SendResponse(response);
         }
 
-        Response ProcessMessage(Message message)
+        async ValueTask<Response> ProcessMessage(Message message)
         {
             switch(message)
             {
@@ -114,6 +114,9 @@ namespace Babbelite.Server.Core
                 case PushLiveTranscribeAudioData pushLiveTranscribeAudioData:
                     PushLiveTranscribeAudioData(pushLiveTranscribeAudioData);
                     break;
+
+                case TranslateText translateText:
+                    return await Server.Translation.Translate(translateText).ConfigureAwait(false);
             }
 
             // If we get here, we just want to send a generic ok response
