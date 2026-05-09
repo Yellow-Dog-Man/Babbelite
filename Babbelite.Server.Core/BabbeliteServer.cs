@@ -60,6 +60,7 @@ namespace Babbelite.Server.Core
         void Initialize()
         {
             InitializeTranscription(Config.Transcription);
+            InitializeTranslation(Config.Translation);
         }
 
         void InitializeTranscription(TranscriptionConfig config)
