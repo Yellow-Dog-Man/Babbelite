@@ -39,6 +39,11 @@ namespace Babbelite.Client
             try
             {
                 var connection = new BabbeliteConnection();
+                connection.OnDisconnected += () =>
+                {
+                    lock (_connections)
+                        _connections.Remove(connection);
+                };
 
                 await connection.Connect(uri, token);
 
@@ -70,6 +75,9 @@ namespace Babbelite.Client
 
             foreach(var connection in _connections)
             {
+                if (!connection.IsConnected)
+                    continue;
+
                 // TODO!!! Improve the logic to take capacity into account
                 // Currently we don't track that, so just pick one that has the least amount
                 if (best == null || best.TranscriptionSessionCount > connection.TranscriptionSessionCount)

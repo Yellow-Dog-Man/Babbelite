@@ -23,6 +23,8 @@ namespace Babbelite.Client
 
         public Exception FailureException { get; private set; }
 
+        public event Action OnDisconnected;
+
         ClientWebSocket _client;
         CancellationTokenSource _cancellation;
 
@@ -97,6 +99,14 @@ namespace Babbelite.Client
                             throw new NotSupportedException("Binary messages aren't currently supported");
 
                         case WebSocketMessageType.Close:
+                            try
+                            {
+                                OnDisconnected?.Invoke();
+                            }
+                            catch(Exception ex)
+                            {
+                                Console.WriteLine($"Exception running OnDisconnected event:\n{ex}");
+                            }
                             _cancellation.Cancel();
                             break;
                     }
