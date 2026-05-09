@@ -42,6 +42,6 @@ namespace Babbelite.Shared
         public DateTime LastUpdateTimestamp { get; set; }
 
         [JsonIgnore]
-        public Uri URL => new Uri($"ws://{EndPoint}:{Port}");
+        public Uri URL => new Uri($"ws://{EndPoint.Address}:{Port}");
     }
 }
