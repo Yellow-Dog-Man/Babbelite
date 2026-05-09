@@ -16,26 +16,31 @@ namespace Babbelite.Server.Core
         Dictionary<ClientMetadata, ClientSession> _sessions = new Dictionary<ClientMetadata, ClientSession>();
 
         #region CONNECTION
-
         public int Port { get; private set; }
+        public string UniqueID { get; private set; }
+        public string ServerName => Config.ServerName;
 
         #endregion
 
+        public Config Config { get; private set; }
+
         #region TRANSCRIBING
 
-        public Config Config { get; private set; }
         public TranscriptionService Transcription { get; private set; }
 
         #endregion
 
-        public BabbeliteServer(int port, Config config)
+        readonly BabbeliteServerAnnouncer announcer;
+
+        public BabbeliteServer(Config config)
         {
             if (config == null)
                 throw new ArgumentNullException(nameof(config));
 
-            this.Port = port;
+            this.Port = config.Port;
+            this.UniqueID = Guid.NewGuid().ToString();
 
-            _server = new WatsonWsServer("localhost", port);
+            _server = new WatsonWsServer("localhost", this.Port);
 
             _server.ClientConnected += ClientConnected;
             _server.ClientDisconnected += ClientDisconnected;
@@ -47,7 +52,8 @@ namespace Babbelite.Server.Core
 
             this.Config = config;
 
-            
+            // This will automatically announce the server on LAN
+            announcer = new BabbeliteServerAnnouncer(this);
         }
 
         void Initialize()

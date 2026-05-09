@@ -9,8 +9,30 @@ namespace Babbelite.Client
 {
     public class BabbeliteClient
     {
+        BabbeliteServerListener _listener;
+
         // Connections to Babbelite servers
         List<BabbeliteConnection> _connections = new List<BabbeliteConnection>();
+
+        public BabbeliteClient(bool autoConnect)
+        {
+            _listener = new BabbeliteServerListener();
+
+            if(autoConnect)
+                _listener.ServerDiscovered += ServerDiscovered;
+
+            _listener.Start();
+        }
+
+        void ServerDiscovered(Shared.BabbeliteServerInfo serverInfo)
+        {
+            // Connect to the server automatically
+            Task.Run(async () =>
+            {
+                // Connect immediatelly when it's discovered
+                await ConnectTo(serverInfo.URL, CancellationToken.None);
+            });
+        }
 
         public async Task ConnectTo(Uri uri, CancellationToken token)
         {

@@ -12,6 +12,18 @@ namespace Babbelite.Server.Core
     public class Config
     {
         /// <summary>
+        /// Optional name for the server. Used when presenting list of available servers to the user.
+        /// </summary>
+        [JsonPropertyName("serverName")]
+        public string ServerName { get; set; }
+
+        /// <summary>
+        /// On which port to host the server
+        /// </summary>
+        [JsonPropertyName("port")]
+        public int Port { get; set; }
+
+        /// <summary>
         /// Configuration for speech to text transcription system
         /// </summary>
         [JsonPropertyName("transcription")]
