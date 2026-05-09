@@ -49,10 +49,17 @@ namespace Babbelite.Server.Core
 
         async Task Announce(CancellationToken cancellationToken)
         {
-            while(!cancellationToken.IsCancellationRequested)
+            try
             {
-                AnnounceServer();
-                await Task.Delay(BabbeliteServerInfo.ANNOUNCE_INTERVAL);
+                while (!cancellationToken.IsCancellationRequested)
+                {
+                    AnnounceServer();
+                    await Task.Delay(BabbeliteServerInfo.ANNOUNCE_INTERVAL);
+                }
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine($"EXCEPTION running announcement:\n{ex}");
             }
         }
 

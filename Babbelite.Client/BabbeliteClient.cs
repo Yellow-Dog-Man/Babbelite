@@ -36,12 +36,19 @@ namespace Babbelite.Client
 
         public async Task ConnectTo(Uri uri, CancellationToken token)
         {
-            var connection = new BabbeliteConnection();
+            try
+            {
+                var connection = new BabbeliteConnection();
 
-            await connection.Connect(uri, token);
+                await connection.Connect(uri, token);
 
-            lock (_connections)
-                _connections.Add(connection);
+                lock (_connections)
+                    _connections.Add(connection);
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine($"Exception connecting to {uri}:\n{ex}");
+            }
         }
 
         public async Task<LiveTranscriptionSession> CreateTranscriptionSession(string customId = null)
