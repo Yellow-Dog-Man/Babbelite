@@ -17,6 +17,9 @@ namespace Babbelite.Server.Core
         [JsonPropertyName("serverName")]
         public string ServerName { get; set; }
 
+        [JsonPropertyName("hostName")]
+        public string HostName { get; set; }
+
         /// <summary>
         /// On which port to host the server
         /// </summary>

@@ -39,8 +39,9 @@ namespace Babbelite.Server.Core
 
             this.Port = config.Port;
             this.UniqueID = Guid.NewGuid().ToString();
+            this.Config = config;
 
-            _server = new WatsonWsServer("localhost", this.Port);
+            _server = new WatsonWsServer(Config.HostName ?? "localhost", this.Port);
 
             _server.ClientConnected += ClientConnected;
             _server.ClientDisconnected += ClientDisconnected;
@@ -50,10 +51,10 @@ namespace Babbelite.Server.Core
 
             _server.Start();
 
-            this.Config = config;
-
             // This will automatically announce the server on LAN
             announcer = new BabbeliteServerAnnouncer(this);
+
+            Initialize();
         }
 
         void Initialize()
