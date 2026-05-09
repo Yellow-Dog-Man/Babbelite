@@ -11,6 +11,8 @@ namespace Babbelite.Server.Core
 
         public LibreTranslateTranslationService(LibreTranslateConfig config)
         {
+            Console.WriteLine($"Connecting to LibreTranslate at {config.HostURL}");
+
             _translator = new LibreTranslate.Net.Enhanced.LibreTranslate(config.HostURL, config.ApiKey);
         }
 

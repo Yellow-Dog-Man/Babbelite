@@ -9,6 +9,8 @@ namespace Babbelite.Client
 {
     public class BabbeliteClient
     {
+        public int ConnectionCount => _connections.Count;
+
         BabbeliteServerListener _listener;
 
         // Connections to Babbelite servers
