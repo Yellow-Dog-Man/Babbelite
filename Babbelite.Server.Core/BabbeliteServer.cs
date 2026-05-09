@@ -24,9 +24,9 @@ namespace Babbelite.Server.Core
 
         public Config Config { get; private set; }
 
-        #region TRANSCRIBING
-
+        #region SERVICES
         public TranscriptionService Transcription { get; private set; }
+        public TranslationService Translation { get; private set; }
 
         #endregion
 
@@ -73,6 +73,25 @@ namespace Babbelite.Server.Core
                 case null:
                     Console.WriteLine($"No transcription service configured");
                     break;
+
+                default:
+                    throw new NotImplementedException($"Unsupported config: {config}");
+            }
+        }
+
+        void InitializeTranslation(TranslationConfig config)
+        {
+            switch(config)
+            {
+                case LibreTranslateConfig libreTranslate:
+                    break;
+
+                case null:
+                    Console.WriteLine($"No translation service configured");
+                    break;
+
+                default:
+                    throw new NotImplementedException($"Unsupported config: {config}");
             }
         }
 
