@@ -18,12 +18,20 @@ namespace Babbelite.Server.Core
 
         protected override async Task<string> Translate(string text, string sourceLanguage, string targetLanguage)
         {
-            return await _translator.TranslateAsync(new LibreTranslate.Net.Enhanced.Models.Translate()
+            try
             {
-                Source = sourceLanguage,
-                Target = targetLanguage,
-                Text = text
-            });
+                return await _translator.TranslateAsync(new LibreTranslate.Net.Enhanced.Models.Translate()
+                {
+                    Source = sourceLanguage,
+                    Target = targetLanguage,
+                    Text = text
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Exception translating from {sourceLanguage} to {targetLanguage}\n{ex}");
+                throw;
+            }
         }
     }
 }
