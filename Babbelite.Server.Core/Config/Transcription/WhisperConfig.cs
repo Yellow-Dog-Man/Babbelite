@@ -12,5 +12,11 @@ namespace Babbelite.Server.Core
 
         [JsonPropertyName("sileroVadModelPath")]
         public string SileroVadModelPath { get; set; }
+
+        [JsonPropertyName("sileroVadThreshold")]
+        public float SileroVadThreshold { get; set; } = 0.1f;
+
+        [JsonPropertyName(("sileroVadThresholdGap"))]
+        public float SileroVadThresholdGap { get; set; } = 0.05f;
     }
 }

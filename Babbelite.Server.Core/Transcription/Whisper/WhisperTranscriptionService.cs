@@ -18,8 +18,8 @@ namespace Babbelite.Server.Core
 
             VadDetectorFactory = new SileroVadDetectorFactory(new SileroVadOptions(config.SileroVadModelPath)
             {
-                Threshold = 0.2f, // The threshold for Silero VAD. The default is 0.5f.
-                ThresholdGap = 0.1f, // The threshold gap for Silero VAD. The default is 0.15f.
+                Threshold = config.SileroVadThreshold, // The threshold for Silero VAD. The default is 0.5f.
+                ThresholdGap = config.SileroVadThresholdGap, // The threshold gap for Silero VAD. The default is 0.15f.
             });
         }
 
