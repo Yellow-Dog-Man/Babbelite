@@ -26,7 +26,71 @@ namespace Babbelite.Server.Core
 
         #region SERVICES
         public TranscriptionService Transcription { get; private set; }
-        public TranslationService Translation { get; private set; }
+        public IReadOnlyList<TranslationService> TranslationServices => _translationServices;
+
+        private List<TranslationService> _translationServices = new List<TranslationService>();
+
+        public async ValueTask<TranslationService?> FindBestTranslationService(string sourceLanguage, string targetLanguage)
+        {
+            TranslationService? bestService = null;
+            bool bestPrefersTargetLanguage = false;
+            bool bestPrefersSourceLanguage = false;
+            
+            // Try to find a preferred one first if possible
+            foreach (var service in _translationServices)
+            {
+                // Filter services that don't support the source or target languages
+                if (!(await service.SupportsLanguage(sourceLanguage)))
+                    continue;
+                
+                if (!(await service.SupportsLanguage(targetLanguage)))
+                    continue;
+                
+                var prefersSource = service.IsPreferredForLanguage(sourceLanguage);
+                var prefersTarget = service.IsPreferredForLanguage(targetLanguage);
+
+                // Best case scenario. Preferred for both source and target languages
+                // We can just return it straight away
+                if (prefersSource && prefersTarget)
+                    return service;
+
+                void Select()
+                {
+                    bestService = service;
+                    
+                    bestPrefersSourceLanguage = prefersSource;
+                    bestPrefersTargetLanguage = prefersTarget;
+                }
+
+                // If we have a service that prefers the target language and this one doesn't
+                // ignore it. We want to prefer the target language over the source
+                if (bestPrefersTargetLanguage && !prefersTarget)
+                    continue;
+
+                // If the service prefers the target language, use it
+                // We currently don't have any service that prefers target
+                if (prefersTarget)
+                {
+                    Select();
+                    continue;
+                }
+
+                // If we don't have service that prefers target, but this one prefers source
+                // Then use it as well if we haven't found one that prefers source yet
+                if (!bestPrefersSourceLanguage && prefersSource)
+                {
+                    Select();
+                    continue;
+                }
+                
+                // We we don't have anything yet, we use what we can
+                if(bestService == null)
+                    Select();
+            }
+
+            // Give what we found. This can also be null if none of the services support given language
+            return bestService;
+        }
 
         #endregion
 
@@ -60,7 +124,10 @@ namespace Babbelite.Server.Core
         void Initialize()
         {
             InitializeTranscription(Config.Transcription);
-            InitializeTranslation(Config.Translation);
+            
+            if(Config.TranslationServices != null)
+                foreach(var serviceConfig in Config.TranslationServices)
+                    InitializeTranslation(serviceConfig);
         }
 
         void InitializeTranscription(TranscriptionConfig config)
@@ -85,12 +152,11 @@ namespace Babbelite.Server.Core
             switch(config)
             {
                 case LibreTranslateConfig libreTranslate:
-                    Translation = new LibreTranslateTranslationService(libreTranslate);
+                    _translationServices.Add(new LibreTranslateTranslationService(libreTranslate));
                     break;
 
                 case null:
-                    Console.WriteLine($"No translation service configured");
-                    break;
+                    throw new ArgumentException("Null translation service config");
 
                 default:
                     throw new NotImplementedException($"Unsupported config: {config}");

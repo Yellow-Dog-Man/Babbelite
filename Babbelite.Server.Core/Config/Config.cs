@@ -33,9 +33,9 @@ namespace Babbelite.Server.Core
         public TranscriptionConfig Transcription { get; set; }
 
         /// <summary>
-        /// Configuration for translation service
+        /// Configuration for translation services
         /// </summary>
-        [JsonPropertyName("translation")]
-        public TranslationConfig Translation { get; set; }
+        [JsonPropertyName("translationServices")]
+        public List<TranslationConfig> TranslationServices { get; set; }
     }
 }

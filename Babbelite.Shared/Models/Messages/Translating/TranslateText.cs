@@ -24,6 +24,6 @@ namespace Babbelite.Shared
         /// Language code of the target language into which the text should be translated to
         /// </summary>
         [JsonPropertyName("targetLanguage")]
-        public string TargetLangoage { get; set; }
+        public string TargetLanguage { get; set; }
     }
 }

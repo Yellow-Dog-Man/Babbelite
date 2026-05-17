@@ -57,11 +57,11 @@ namespace Babbelite.Server.Core
             {
                 // TODO!!! This should come from session info?
                 AutodetectLanguageOnce = false, // Flag to detect the language only once or for each segment
-                IncludeSpeechRecogizingEvents = true, // Flag to include speech recognizing events (RealtimeSegmentRecognizing)
+                IncludeSpeechRecogizingEvents = false, // Flag to include speech recognizing events (RealtimeSegmentRecognizing)
                 RetrieveTokenDetails = true, // Flag to retrieve token details
                 LanguageAutoDetect = true, // Flag to auto-detect the language
             });
-
+            
             _cancellation = new CancellationTokenSource();
 
             // Start the analysis

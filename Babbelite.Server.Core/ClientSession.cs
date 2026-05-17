@@ -138,7 +138,20 @@ namespace Babbelite.Server.Core
                     break;
 
                 case TranslateText translateText:
-                    return await Server.Translation.Translate(translateText).ConfigureAwait(false);
+                    // Find the best translation service for this request
+                    var service = await Server.FindBestTranslationService(translateText.SourceLanguage, translateText.TargetLanguage);
+
+                    if (service == null)
+                    {
+                        // Nothing was found, so we need to return an error
+                        return new TranslatedText()
+                        {
+                            IsSuccess = false,
+                            ErrorMessage = "No suitable translation service found"
+                        };
+                    }
+
+                    return await service.Translate(translateText).ConfigureAwait(false);
             }
 
             // If we get here, we just want to send a generic ok response

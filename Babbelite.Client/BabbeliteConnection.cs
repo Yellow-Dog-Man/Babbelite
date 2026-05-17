@@ -257,7 +257,7 @@ namespace Babbelite.Client
 
             message.Text = text;
             message.SourceLanguage = sourceLanguage;
-            message.TargetLangoage = targetLanguage;
+            message.TargetLanguage = targetLanguage;
 
             var response = await SendMessage<TranslateText, TranslatedText>(message).ConfigureAwait(false);
 
