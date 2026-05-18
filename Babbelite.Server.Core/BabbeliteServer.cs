@@ -129,6 +129,9 @@ namespace Babbelite.Server.Core
                     
                     _translationServices.Add(service);
                 }
+            
+            // Sort translation engines by their priority
+            _translationServices.Sort((a,b) => -a.Priority.CompareTo(b.Priority));
         }
 
         void InitializeTranscription(TranscriptionConfig config)

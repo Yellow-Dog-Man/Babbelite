@@ -7,10 +7,13 @@ namespace Babbelite.Server.Core
 {
     public abstract class TranslationService
     {
+        public int Priority { get; private set; }
+        
         private HashSet<string> _preferredLanguages;
 
         public TranslationService(TranslationConfig config)
         {
+            Priority = config.Priority;
             _preferredLanguages = config.PreferredLanguages;
         }
 

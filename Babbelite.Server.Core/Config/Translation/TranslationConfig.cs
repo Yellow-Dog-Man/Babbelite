@@ -9,6 +9,11 @@ namespace Babbelite.Server.Core
     [JsonDerivedType(typeof(DeepLConfig), "deepL")]
     public abstract class TranslationConfig
     {
+        /// <summary>
+        /// When picking a translation engine, ones with higher priority number get considered first.
+        /// If there are multiple translation engines that are equal in supported languages, the one
+        /// with the highest priority will be picked.
+        /// </summary>
         [JsonPropertyName("priority")]
         public int Priority { get; set; }
         
