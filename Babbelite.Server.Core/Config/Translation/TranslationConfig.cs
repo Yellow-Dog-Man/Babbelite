@@ -6,6 +6,7 @@ using System.Text.Json.Serialization;
 namespace Babbelite.Server.Core
 {
     [JsonDerivedType(typeof(LibreTranslateConfig), "libreTranslate")]
+    [JsonDerivedType(typeof(DeepLConfig), "deepL")]
     public abstract class TranslationConfig
     {
         [JsonPropertyName("priority")]

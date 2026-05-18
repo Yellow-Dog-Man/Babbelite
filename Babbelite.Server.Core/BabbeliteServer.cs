@@ -40,10 +40,7 @@ namespace Babbelite.Server.Core
             foreach (var service in _translationServices)
             {
                 // Filter services that don't support the source or target languages
-                if (!(await service.SupportsLanguage(sourceLanguage)))
-                    continue;
-                
-                if (!(await service.SupportsLanguage(targetLanguage)))
+                if (!(await service.SupportsTranslation(sourceLanguage, targetLanguage)))
                     continue;
                 
                 var prefersSource = service.IsPreferredForLanguage(sourceLanguage);
@@ -94,10 +91,13 @@ namespace Babbelite.Server.Core
 
         #endregion
 
-        readonly BabbeliteServerAnnouncer announcer;
+        BabbeliteServerAnnouncer announcer;
 
-        public BabbeliteServer(Config config)
+        public async Task Initialize(Config config)
         {
+            if (this.Config != null)
+                throw new InvalidOperationException("Server is already initialized");
+            
             if (config == null)
                 throw new ArgumentNullException(nameof(config));
 
@@ -117,17 +117,18 @@ namespace Babbelite.Server.Core
 
             // This will automatically announce the server on LAN
             announcer = new BabbeliteServerAnnouncer(this);
-
-            Initialize();
-        }
-
-        void Initialize()
-        {
+            
+            // Initialize the services
             InitializeTranscription(Config.Transcription);
             
             if(Config.TranslationServices != null)
-                foreach(var serviceConfig in Config.TranslationServices)
-                    InitializeTranslation(serviceConfig);
+                foreach (var serviceConfig in Config.TranslationServices)
+                {
+                    var service = InstantiateTranslation(serviceConfig);
+                    await service.Initialize();
+                    
+                    _translationServices.Add(service);
+                }
         }
 
         void InitializeTranscription(TranscriptionConfig config)
@@ -147,13 +148,15 @@ namespace Babbelite.Server.Core
             }
         }
 
-        void InitializeTranslation(TranslationConfig config)
+        TranslationService InstantiateTranslation(TranslationConfig config)
         {
             switch(config)
             {
                 case LibreTranslateConfig libreTranslate:
-                    _translationServices.Add(new LibreTranslateTranslationService(libreTranslate));
-                    break;
+                    return new LibreTranslateTranslationService(libreTranslate);
+                
+                case DeepLConfig deepL:
+                    return new DeepLTranslationService(deepL);
 
                 case null:
                     throw new ArgumentException("Null translation service config");

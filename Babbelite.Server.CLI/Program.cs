@@ -26,7 +26,8 @@ else
     };
 }
 
-var server = new BabbeliteServer(config);
+var server = new BabbeliteServer();
+await server.Initialize(config);
 
 Console.WriteLine($"Server started on: {server.Port}");
 

@@ -7,6 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="DeepL.net" Version="1.21.0" />
     <PackageReference Include="LibreTranslate.Net.Enhanced" Version="1.9.5.1" />
     <PackageReference Include="System.Threading.Tasks.Dataflow" Version="10.0.7" />
     <PackageReference Include="WatsonWebsocket" Version="4.1.8" />

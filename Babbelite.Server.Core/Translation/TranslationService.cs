@@ -14,10 +14,12 @@ namespace Babbelite.Server.Core
             _preferredLanguages = config.PreferredLanguages;
         }
 
+        public virtual Task Initialize() => Task.CompletedTask;
+
         public bool IsPreferredForLanguage(string language) =>
             _preferredLanguages?.Contains(language.ToLowerInvariant()) ?? false;
         
-        public abstract ValueTask<bool> SupportsLanguage(string language);
+        public abstract ValueTask<bool> SupportsTranslation(string sourceLanguage, string targetLanguage);
         
         public async Task<TranslatedText> Translate(TranslateText text)
         {

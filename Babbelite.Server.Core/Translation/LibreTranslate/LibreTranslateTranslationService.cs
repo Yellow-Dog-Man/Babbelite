@@ -11,8 +11,8 @@ namespace Babbelite.Server.Core
     {
         LibreTranslate.Net.Enhanced.LibreTranslate _translator;
 
-        private List<SupportedLanguages> _languages;
-        private HashSet<string> _languageCodes;
+        List<SupportedLanguages> _languages;
+        Dictionary<string, HashSet<string>> _languagesByCode;
 
         public LibreTranslateTranslationService(LibreTranslateConfig config) : base(config)
         {
@@ -20,16 +20,30 @@ namespace Babbelite.Server.Core
 
             _translator = new LibreTranslate.Net.Enhanced.LibreTranslate(config.HostURL, config.ApiKey);
         }
-        
-        public override async ValueTask<bool> SupportsLanguage(string language)
-        {
-            if (_languages == null)
-            {
-                _languages = (await _translator.GetSupportedLanguagesAsync()).ToList();
-                _languageCodes = _languages.Select(l => l.Code.ToLowerInvariant()).ToHashSet();
-            }
 
-            return _languageCodes.Contains(language.ToLowerInvariant());
+        async Task InitializeLanguages()
+        {
+            // Build the language map
+            _languages = (await _translator.GetSupportedLanguagesAsync()).ToList();
+            _languagesByCode = new Dictionary<string, HashSet<string>>();
+                
+            foreach(var lang in _languages)
+                _languagesByCode.Add(lang.Code.ToLowerInvariant(), 
+                    lang.Targets.Select(l => l.ToLowerInvariant()).ToHashSet());
+        }
+        
+        public override async ValueTask<bool> SupportsTranslation(string sourceLanguage, string targetLanguage)
+        {
+            if (_languagesByCode == null)
+                await InitializeLanguages();
+
+            sourceLanguage = sourceLanguage.ToLowerInvariant();
+            targetLanguage = targetLanguage.ToLowerInvariant();
+
+            if (!_languagesByCode.TryGetValue(sourceLanguage, out var suportedLanguages))
+                return false;
+
+            return suportedLanguages.Contains((targetLanguage));
         }
 
         protected override async Task<string> Translate(string text, string sourceLanguage, string targetLanguage)
